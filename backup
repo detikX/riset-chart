@@ -1,0 +1,288 @@
+< !DOCTYPE html >
+    <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Document</title>
+                    <link rel="stylesheet" href="sass/style.css">
+                    </head>
+                    <body>
+                        <div id="container"></div>
+                        <!-- <div id="country-chart"></div> -->
+                        <div id="info">
+                            <span class="f32">
+                                <span id="flag"></span>
+                            </span>
+                            <h2></h2>
+                            <div class="subheader">Click countries to view history</div>
+                            <div id="country-chart"></div>
+                        </div>
+                        <code id="csv" hidden>
+                            "Data Source","World Development Indicators",
+
+                            "Country Name","Country Code","Indicator Name","Indicator","2017","2018","2019","2020","2021","2022","2023","2024",
+                            "Aceh","id-ac","Population (Total)","SP.POP.TOTL","2","5","6","8","10","12","15","25",
+                            "Kalimantan Timur","id-kt","Population (Total)","SP.POP.TOTL","2","5","6","8","10","12","15","25",
+                        </code>
+                        <script src="js/jquery-3.5.1.min.js"></script>
+                        <script src="http://code.highcharts.com/highcharts.js"></script>
+                        <script src="http://code.highcharts.com/maps/modules/map.js"></script>
+                        <script src="https://code.highcharts.com/maps/modules/accessibility.js"></script>
+                        <script src="http://code.highcharts.com/maps/modules/exporting.js"></script>
+                        <script src="http://code.highcharts.com/mapdata/countries/id/id-all.js"></script>
+                        <script>
+                            $(function () {
+
+
+var csv = $("#csv").text();
+
+
+// Parse the CSV Data
+/*Highcharts.data({
+                                csv: data,
+                            switchRowsAndColumns: true,
+                            parsed: function () {
+                                console.log(this.columns);
+        }
+    });*/
+
+                            // Very simple and case-specific CSV string splitting
+                            function CSVtoArray(text) {
+    return text.replace(/^"/, '')
+                            .replace(/",$/, '')
+                            .split('","');
+}
+
+                            csv = csv.split(/\n/);
+                            var countries = { },
+                            mapChart,
+                            countryChart,
+                            numRegex = /^[0-9\.]+$/,
+                            quoteRegex = /\"/g,
+                            categories = CSVtoArray(csv[1]).slice(4);
+
+                            // Parse the CSV into arrays, one array each country
+
+                            $.each(csv.slice(2), function (j, line) {
+
+    var row = CSVtoArray(line),
+                            data = row.slice(4);
+
+                            $.each(data, function (i, val) {
+
+                                val = val.replace(quoteRegex, '');
+                            if (numRegex.test(val)) {
+                                val = parseInt(val, 10);
+        } else if (!val) {
+                                val = null;
+        }
+                            data[i] = val;
+    });
+
+                            countries[row[1]] = {
+                                name: row[0],
+                            code3: row[1],
+                            data: data
+    };
+});
+
+                            // For each country, use the latest value for current population
+                            var data = [];
+                            for (var code3 in countries) {
+    var value = null,
+                            year,
+                            itemData = countries[code3].data,
+                            i = itemData.length;
+
+                            while (i--) {
+        if (typeof itemData[i] === 'number') {
+                                value = itemData[i];
+                            year = categories[i];
+                            break;
+        }
+    }
+                            data.push({
+                                name: countries[code3].name,
+                            code3: code3,
+                            value: value,
+                            year: year
+    });
+}
+                            // Add lower case codes to the data set for inclusion in the tooltip.pointFormat
+                            var mapData = Highcharts.geojson(Highcharts.maps['countries/id/id-all']);
+                            $.each(mapData, function () {
+                                this.id = this.properties['hc-key']; // for Chart.get()
+});
+
+                            // Wrap point.select to get to the total selected points
+                            Highcharts.wrap(Highcharts.Point.prototype, 'select', function (proceed) {
+
+                                proceed.apply(this, Array.prototype.slice.call(arguments, 1));
+
+                            var points = mapChart.getSelectedPoints();
+                            // console.log('points',points[0].name);
+
+                            if (points.length) {
+        if (points.length === 1) {
+                                $('#info h2').html(points[0].name);
+        } else {
+                                $('#info h2').html('Perbandingan Provinsi');
+
+        }
+                            $('#info .subheader').html('<h4>Linimasa Konflik per Tahun</h4><small><em>Shift + Click on map to compare countries</em></small>')
+
+                            if (!countryChart) {
+                                countryChart = $('#country-chart').highcharts({
+                                    chart: {
+                                        height: 250,
+                                        spacingLeft: 0
+                                    },
+                                    credits: {
+                                        enabled: false
+                                    },
+                                    title: {
+                                        text: null
+                                    },
+                                    subtitle: {
+                                        text: null
+                                    },
+                                    xAxis: {
+                                        tickPixelInterval: 50,
+                                        crosshair: true
+                                    },
+                                    yAxis: {
+                                        title: null,
+                                        opposite: true
+                                    },
+                                    tooltip: {
+                                        shared: true
+                                    },
+                                    plotOptions: {
+                                        series: {
+                                            animation: {
+                                                duration: 500
+                                            },
+                                            marker: {
+                                                enabled: false
+                                            },
+                                            threshold: 0,
+                                            pointStart: parseInt(categories[0], 10),
+                                        }
+                                    }
+                                }).highcharts();
+        }
+
+        // countryChart.series.slice(0).forEach(function (s) {
+                                //         s.remove(false);
+                                //     });
+
+
+
+                                /* $.each(points, function (i) {
+                                     // console.log(points[0].value);
+                                     // Update
+                                     // console.log(countries[this.code3].data);
+                                     //console.log(countries[this.code3].data);
+                                     // console.log('countryChart.series[i]',countryChart.series);
+                                     // if (countryChart.series[i]) {
+                                         // $.each(countries[this.code3].data, function (pointI, value) {
+                                         //         countryChart.series[i].points[pointI].update(value, false);
+                                         //     });
+                                         // countryChart.series[i].update({
+                                         //     name: this.name,
+                                         //     data: countries[this.code3].data,
+                                         //     type: points.length > 1 ? 'line' : 'area'
+                                         // }, false);
+                                     // } 
+                                     // else {
+                                         countryChart.addSeries({
+                                             name: this.name,
+                                             data: countries[this.code3].data,
+                                             type: points.length > 1 ? 'line' : 'area'
+                                             // type: 'line'
+                                         }, false);
+                                     // }
+                                 });
+                                 console.log(countryChart.series.length);
+                                 console.log('s',points.length);
+                                 // while (countryChart.series.length > points.length) {
+                                 //     countryChart.series[countryChart.series.length - 1].remove(false);
+                                 // }
+                                 countryChart.redraw();*/
+
+                                countryChart.series.slice(0).forEach(function (s) {
+                                    s.remove(false);
+                                });
+                            console.log(countryChart);
+                            points.forEach(function (p) {
+                                console.log(points);
+                            countryChart.addSeries({
+                                name: p.name,
+                            data: countries[p.code3].data,
+                    type: points.length > 1 ? 'line' : 'area'
+                }, false);
+            });
+                            countryChart.redraw();
+
+    } else {
+                                $('#info h2').html('');
+                            $('#info .subheader').html('');
+                            if (countryChart) {
+                                countryChart = countryChart.destroy();
+        }
+    }
+});
+                            // Initiate the map chart
+                            //ini nilai
+                            // console.log("cek", mapData);
+                            mapChart = $('#container').highcharts('Map', {
+
+                                title: {
+                                text: 'Persebaran Konflik Wilayah Adat'
+    },
+
+                            subtitle: {
+                                text: 'Source: BRWA, tanahkita'
+    },
+
+                            mapNavigation: {
+                                enabled: true,
+                            buttonOptions: {
+                                verticalAlign: 'bottom'
+        }
+    },
+
+                            colorAxis: {
+                                type: 'logarithmic',
+                            endOnTick: false,
+                            startOnTick: true,
+                            min: 1,
+                            max: 100
+    },
+
+                            tooltip: {
+                                footerFormat: '<span style="font-size: 10px">(Click for details)</span>'
+    },
+
+                            series: [{
+                                data: data,
+                            mapData: mapData,
+                            joinBy: ['id', 'code3'],
+                            name: 'Konflik Wilayah',
+                            allowPointSelect: true,
+                            cursor: 'pointer',
+                            states: {
+                                select: {
+                                color: '#a4edba',
+                            borderColor: 'black',
+                            dashStyle: 'shortdot'
+            }
+        }
+    }]
+}).highcharts();
+
+                            mapChart.get('id-kt').select();
+});
+                        </script>
+                    </body>
+                </html>
