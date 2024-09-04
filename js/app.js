@@ -148,7 +148,7 @@
                 countryChart.addSeries({
                     name: p.name,
                     data: countries[p.code3].data,
-                    // type: points.length > 1 ? 'line' : 'area'
+                    type: points.length > 1 ? 'line' : 'area'
                 }, false);
             });
             countryChart.redraw();

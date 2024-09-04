@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- https://jsfiddle.net/dw7714oa/3/ contohhh bagus inggris -->
 <html lang="en">
     <head>
         <meta charset="UTF-8">
@@ -152,10 +153,19 @@ Highcharts.wrap(Highcharts.Point.prototype, 'select', function (proceed) {
                 },
                 yAxis: {
                     title: null,
-                    opposite: true
+                    opposite: true,
+                    min: 70,
+                    labels: {
+                        formatter: function () {
+                            return Highcharts.numberFormat(this.value, 0, "", ".");
+                        }
+                    }
                 },
                 tooltip: {
-                    shared: true
+                    shared: true,
+                    pointFormatter: function () {
+                        return "<span style='color:{point.color}'></span> " + this.series.name + ": <b>" + Highcharts.numberFormat(this.y, 0, "", ".") + "</b><br/>";
+                    }
                 },
                 plotOptions: {
                     series: {
@@ -171,58 +181,22 @@ Highcharts.wrap(Highcharts.Point.prototype, 'select', function (proceed) {
                 }
             }).highcharts();
         }
-
-        // countryChart.series.slice(0).forEach(function (s) {
-        //         s.remove(false);
-        //     });
-
       
 
-       $.each(points, function (i) {
-            // console.log(points[0].value);
-            // Update
-            // console.log(countries[this.code3].data);
-            console.log(countries[this.code3].data);
-            // console.log('countryChart.series[i]',countryChart.series);
-            if (countryChart.series[i]) {
-                $.each(countries[this.code3].data, function (pointI, value) {
-                        countryChart.series[i].points[pointI].update(value, false);
-                    });
-                countryChart.series[i].update({
-                    name: this.name,
-                    data: countries[this.code3].data,
-                    type: points.length > 1 ? 'line' : 'area'
-                }, false);
-            } 
-            else {
+     
+        countryChart.series.slice(0).forEach(function (s) {
+                s.remove(false);
+            });
+            console.log(countryChart);
+            points.forEach(function (p) {
+                console.log(points);
                 countryChart.addSeries({
-                    name: this.name,
-                    data: countries[this.code3].data,
+                    name: p.name,
+                    data: countries[p.code3].data,
                     type: points.length > 1 ? 'line' : 'area'
-                    // type: 'line'
                 }, false);
-            }
-        });
-        console.log(countryChart.series.length);
-        console.log('s',points.length);
-        // while (countryChart.series.length > points.length) {
-        //     countryChart.series[countryChart.series.length - 1].remove(false);
-        // }
-        countryChart.redraw();
-
-        // countryChart.series.slice(0).forEach(function (s) {
-        //         s.remove(false);
-        //     });
-        //     console.log(countryChart);
-        //     points.forEach(function (p) {
-        //         console.log(points);
-        //         countryChart.addSeries({
-        //             name: p.name,
-        //             data: countries[p.code3].data,
-        //             type: points.length > 1 ? 'line' : 'area'
-        //         }, false);
-        //     });
-        //     countryChart.redraw();
+            });
+            countryChart.redraw();
 
     } else {
         $('#info h2').html('');
