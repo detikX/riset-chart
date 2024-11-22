@@ -28,7 +28,7 @@ $(function () {
     ],
         mapChart,
         countryChart,
-        categories = ['1998', '1999', '2000', '2001']
+        categories = ['Gerindra', 'PDIP', 'Demokrat', 'Golkar']
 
     var mapData = Highcharts.geojson(Highcharts.maps['countries/id/id-all']);
 
